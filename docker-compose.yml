@@ -25,6 +25,7 @@ services:
       - USER=odoo
       - PASSWORD=odoo19@2025
       - PIP_BREAK_SYSTEM_PACKAGES=1
+      - DB_EXTENSIONS=vectorscale       # separate multiple extensions with comma
     volumes:
       #- /etc/timezone:/etc/timezone:ro
       #- /etc/localtime:/etc/localtime:ro

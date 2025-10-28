@@ -5,11 +5,11 @@
 Install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) yourself, then run the following to set up Odoo instance with TimescaleDB @ `localhost:10019` (default master password: `minhng.info`):
 
 ``` bash
-curl -s https://raw.githubusercontent.com/minhng92/odoo-timescaledb/master/run.sh | bash -s odoo-one 10019 20019
+curl -s https://raw.githubusercontent.com/minhng92/odoo-timescaledb/master/run.sh | bash -s odoo-ts 10019 20019
 ```
 
 Some arguments:
-* First argument (**odoo-one**): Odoo deploy folder
+* First argument (**odoo-ts**): Odoo deploy folder
 * Second argument (**10019**): Odoo port
 * Third argument (**20019**): live chat port
 
@@ -27,7 +27,12 @@ This setup integrates **Odoo 19** with **TimescaleDB** (PostgreSQL 17.6 with Tim
 
 - **Odoo 19**: Latest Odoo version with all business applications
 - **TimescaleDB**: Time-series database optimized for real-time analytics
-- **Real-time Analytics**: Enhanced reporting and time-series data analysis
+
+### References
+
+This repository is based on:
+- **Odoo Docker Setup**: [minhng92/odoo-19-docker-compose](https://github.com/minhng92/odoo-19-docker-compose) - Original Odoo 19 Docker Compose configuration
+- **TimescaleDB**: [timescale/timescaledb](https://github.com/timescale/timescaledb) - PostgreSQL extension for time-series data
 
 ## Usage
 
@@ -90,9 +95,29 @@ This setup uses **TimescaleDB** instead of standard PostgreSQL, providing:
 - **Host**: timescaledb
 - **Data Volume**: `./_data/postgresql:/home/postgres/pgdata/data`
 
+### PostgreSQL Extensions
+
+You can install additional PostgreSQL extensions using the `DB_EXTENSIONS` environment variable. This is useful for adding extra functionality to your database.
+
+**Usage**: Set the `DB_EXTENSIONS` environment variable in your `docker-compose.yml` file with a comma-separated list of extensions:
+
+```yaml
+environment:
+  - DB_EXTENSIONS=vectorscale,pg_trgm,hstore
+```
+
+**Available Extensions**: See the full list of supported extensions at [TimescaleDB Extensions Documentation](https://docs.tigerdata.com/use-timescale/latest/extensions/)
+
+**Notes**:
+- Extensions are created automatically when the Odoo container starts
+- If an extension fails to install, it will be skipped without stopping the container
+- Leave `DB_EXTENSIONS` empty or unset if you don't need additional extensions
+
 ## Custom addons
 
 The **addons/** folder contains custom addons. Just put your custom addons if you have any.
+
+**Compatibility**: All built-in Odoo addons and custom addons work normally with full TimescaleDB features.
 
 ## Odoo configuration & log
 
@@ -149,16 +174,9 @@ server {
 </p>
 
 <p>
-<img src="screenshots/odoo-19-dashboard.jpg" width="100%">
+<img src="screenshots/timescaledb-installed-extensions.jpg" width="100%">
 </p>
 
-<p>
-<img src="screenshots/odoo-19-sales-screen.jpg" width="100%">
-</p>
-
-<p>
-<img src="screenshots/odoo-19-product-form.jpg" width="100%">
-</p>
 
 ## ☕ Buy Me a Coffee
 

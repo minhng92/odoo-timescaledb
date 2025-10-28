@@ -39,6 +39,35 @@ check_config "db_port" "$PORT"
 check_config "db_user" "$USER"
 check_config "db_password" "$PASSWORD"
 
+# Function to create PostgreSQL extensions from DB_EXTENSIONS env var
+function create_extensions() {
+    # Check if DB_EXTENSIONS is set and not empty
+    if [ -n "${DB_EXTENSIONS}" ]; then
+        echo "Processing DB_EXTENSIONS: ${DB_EXTENSIONS}"
+
+        # Split by comma and iterate through each extension
+        IFS=',' read -ra EXTENSIONS <<< "$DB_EXTENSIONS"
+        for extension in "${EXTENSIONS[@]}"; do
+            # Trim whitespace
+            extension=$(echo "$extension" | xargs)
+
+            if [ -n "$extension" ]; then
+                echo "Creating extension: $extension"
+
+                # Try to create the extension, skip if error occurs
+                PGPASSWORD="$PASSWORD" psql -h "$HOST" -p "$PORT" -U "$USER" -d postgres \
+                    -c "CREATE EXTENSION IF NOT EXISTS $extension CASCADE;" 2>&1 || {
+                    echo "Warning: Failed to create extension '$extension', skipping..."
+                }
+            fi
+        done
+
+        echo "Extension creation completed"
+    else
+        echo "DB_EXTENSIONS not set or empty, skipping extension creation"
+    fi
+}
+
 case "$1" in
     -- | odoo)
         shift
@@ -46,11 +75,13 @@ case "$1" in
             exec odoo "$@"
         else
             wait-for-psql.py ${DB_ARGS[@]} --timeout=30
+            create_extensions
             exec odoo "$@" "${DB_ARGS[@]}"
         fi
         ;;
     -*)
         wait-for-psql.py ${DB_ARGS[@]} --timeout=30
+        create_extensions
         exec odoo "$@" "${DB_ARGS[@]}"
         ;;
     *)
